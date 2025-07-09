@@ -1,78 +1,497 @@
-<link rel="stylesheet" type="text/css" href="style.css">
-    
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All-in-One API Code Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .tab-active {
+            border-bottom: 2px solid #3b82f6;
+            color: #3b82f6;
+        }
+        .tab-inactive {
+            color: #6b7280;
+        }
+        .spinner {
+            border-top-color: #3498db;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Styles for the generated code preview */
+        .review_wrap { border: 1px solid #e5e7eb; border-radius: 0.75rem; margin-top: 1rem; padding: 1rem; background-color: #f9fafb; }
+        .review-box-header { font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; }
+        .review-summary { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .review-final-score { text-align: center; }
+        .review-final-score h3 { font-size: 2rem; font-weight: bold; color: #1d4ed8; }
+        .review-final-score h4 { font-size: 0.875rem; color: #4b5563; }
+        .review-short-summary { flex: 1; min-width: 250px; }
+        .review-short-summary p { font-size: 0.9rem; color: #374151; line-height: 1.6; }
+        .toggle { border: 1px solid #e5e7eb; border-radius: 0.5rem; margin-top: 1rem; }
+        .toggle-head { cursor: pointer; padding: 0.75rem 1rem; background-color: #f3f4f6; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .toggle-content { padding: 1rem; border-top: 1px solid #e5e7eb; display: none; }
+        .toggle-content ul { list-style-type: none; padding-left: 0; }
+        .toggle-content li { margin-bottom: 0.5rem; }
+        .uk-alert { padding: 1rem; margin-top: 1rem; border-radius: 0.5rem; background-color: #e0f2fe; color: #0c4a6e; display: flex; align-items: center; }
+        .uk-alert a { color: #1d4ed8; font-weight: 600; text-decoration: underline; }
+        .shortc-button.small.blue {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            border-radius: 0.375rem;
+            color: white;
+            font-weight: 500;
+            text-decoration: none;
+            background: linear-gradient(135deg, rgb(6, 147, 227), rgb(155, 81, 224));
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
 
-        <div>
-          <a><img border="0" data-original-height="450" data-original-width="800" height="360" src="https://www.themoviedb.org/t/p/w1000_and_h563_face/A0K1nUQb3N4jl1wTnus35kYzsx2.jpg" width="640" /></a>
-        </div>
+    <div class="container mx-auto p-4 md:p-8 max-w-4xl">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">All-in-One API Code Generator</h1>
+            <p class="text-gray-600 mt-2">Generate HTML for Movies, TV Series, and Anime.</p>
+        </header>
 
-        <div class="review_wrap">
-          <div class="review-box review-bottom review-percentage" id="review-box">
-            <h2 class="review-box-header the-global-title">Mushishi Zoku Shou: Suzu no Shizuku</h2>
+        <main class="bg-white p-6 rounded-2xl shadow-lg">
 
-            <div class="review-summary">
-              <div class="review-final-score">
-                <h3>8.59</h3>
-
-                <h4>Average Rating</h4>
-              </div>
-
-              <div class="review-short-summary">
-                <p>On a warm summer day, a boy heard the sound of bells ringing, as if in celebration, in the mountain near his home. Several years later in that same mountain, the mushishi Ginko encounters a strange girl with weeds growing out of her body. Soon after, Ginko coincidentally runs into the now grown-up boy Yoshiro on his way off the mountain. With Yoshiro's help, Ginko soon begins to uncover who this mysterious girl is and what happened to her.
-
-An adaptation of the last arc in the manga, Mushishi Zoku Shou: Suzu no Shizuku follows Ginko's peculiar journey amidst the occult to unravel the mystery behind the enigmatic girl called Kaya and the mountain that has become her home.
-
-[Written by MAL Rewrite]</p>
-              </div>
+            <!-- Tabs -->
+            <div class="border-b border-gray-200 mb-6">
+                <nav class="flex space-x-4" aria-label="Tabs">
+                    <button id="movie-tab" onclick="switchTab('movie')" class="px-3 py-2 font-medium text-sm rounded-t-lg tab-inactive">Movie</button>
+                    <button id="series-tab" onclick="switchTab('series')" class="px-3 py-2 font-medium text-sm rounded-t-lg tab-inactive">TV Series</button>
+                    <button id="anime-tab" onclick="switchTab('anime')" class="px-3 py-2 font-medium text-sm rounded-t-lg tab-inactive">Anime</button>
+                </nav>
             </div>
-          </div>
+
+            <!-- Input Sections -->
+            <div id="movie-input-section" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div class="md:col-span-2">
+                        <label for="movieId" class="block text-sm font-medium text-gray-700 mb-1">TMDB Movie ID</label>
+                        <input type="text" id="movieId" placeholder="e.g., 550" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                    <button onclick="generateCode()" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
+                        <i class="fas fa-cogs mr-2"></i> Generate
+                    </button>
+                </div>
+            </div>
+            <div id="series-input-section" class="hidden">
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div class="md:col-span-2">
+                        <label for="seriesId" class="block text-sm font-medium text-gray-700 mb-1">TMDB Series ID</label>
+                        <input type="text" id="seriesId" placeholder="e.g., 1399" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                    <button onclick="generateCode()" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
+                        <i class="fas fa-cogs mr-2"></i> Generate
+                    </button>
+                </div>
+            </div>
+            <div id="anime-input-section" class="hidden">
+                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div class="md:col-span-2">
+                        <label for="animeId" class="block text-sm font-medium text-gray-700 mb-1">MyAnimeList ID</label>
+                        <input type="text" id="animeId" placeholder="e.g., 21" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition">
+                    </div>
+                    <button onclick="generateCode()" class="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
+                        <i class="fas fa-cogs mr-2"></i> Generate
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dynamic Buttons Section -->
+            <div class="mt-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Download Links</h3>
+                <div id="addedButtons" class="flex flex-wrap gap-2"></div>
+                <button onclick="addButton()" class="mt-2 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors text-sm">
+                    <i class="fas fa-plus mr-1"></i> Add Button
+                </button>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results-section" class="mt-8 hidden">
+                <div id="preview-container" class="mb-4 p-4 border rounded-lg bg-white"></div>
+                <div class="relative">
+                    <div id="codeBox" class="border border-gray-200 p-4 rounded-lg font-mono text-sm bg-gray-900 text-gray-100 overflow-x-auto max-h-96"></div>
+                    <button id="copyButton" onclick="copyCode()" class="absolute top-2 right-2 bg-gray-700 text-white py-1 px-3 rounded-md hover:bg-gray-600 transition-colors text-xs">
+                        <i class="fas fa-copy mr-1"></i> Copy
+                    </button>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div id="loading-spinner" class="hidden text-center my-8">
+                <div class="spinner w-12 h-12 rounded-full border-4 border-gray-200 mx-auto"></div>
+                <p class="mt-4 text-gray-600">Fetching data...</p>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Custom Modal for Notifications -->
+    <div id="notification-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg shadow-xl text-center max-w-sm">
+            <p id="notification-message" class="text-lg"></p>
+            <button onclick="closeNotification()" class="mt-4 bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">OK</button>
         </div>
-
-        <div class="toggle tie-sc-open">
-          <h3 class="toggle-head">
-            Information <span class="fa fa-angle-down"></span>
-          </h3>
-          <div class="toggle-content">
-            <ul style="text-align: left;">
-              <li>English: null</li>
-              <li>Japanese: 蟲師 続章: 鈴の雫</li>
-              <li>Synonyms: Mushishi Tokubetsu-hen: Suzu no Shizuku, Mushishi: The Next Chapter - Drops of Bells</li>
-              <li>Type: Movie</li>
-              <li>Episodes: 1</li>
-              <li>Status: Finished Airing</li>
-              <li>Aired: May 16, 2015</li>
-              <li>Season: null</li>
-              <li>Broadcast: null</li>
-              <li>Producers: Aniplex, Kodansha, Delfi Sound</li>
-              <li>Licensors: </li>
-              <li>Studios: Artland</li>
-              <li>Source: Manga</li>
-              <li>Genres: Adventure, Mystery, Slice of Life, Supernatural</li>
-              <li>Themes: Adult Cast, Historical, Iyashikei</li>
-              <li>Demographics: Seinen</li>
-              <li>Duration: 47 min</li>
-              <li>Rating: PG-13 - Teens 13 or older</li>
-            </ul>
-          </div>
-        </div>
+    </div>
 
 
-        <div class="uk-alert uk-alert-primary" data-uk-alert="">
-          <!--a class="uk-alert-close" data-uk-close></a-->
-          <p>
-            <span class="uk-margin-xsmall-right" data-uk-icon="happy"></span> To access
-            the private drive just open Google Group and join the Google Group, ignore
-            the rest. After that, Enjoy...&nbsp;<a href="https://groups.google.com/g/bondgreninja" target="_blank">Here</a>
-          </p>
-        </div>
+  <script>
+    // --- STATE MANAGEMENT ---
+    const buttons = [];
+    let activeTab = 'movie';
+    const tmdbApiKey = '3dfa4bae246f35044e56a6dcd3294e3f';
 
-        <div class="toggle tie-sc-close">
-          <h3 class="toggle-head">
-            Google Drive <span aria-hidden="true" class="fa fa-angle-down"></span>
-          </h3>
-          <div class="toggle-content" style="text-align: center;">
-            <a href="https://drive.google.com/drive/folders/11IU7qsoyfjhWhHY4Usnm9Z0MHVrjeAIR" class="shortc-button small blue" style="background: linear-gradient(135deg, rgb(6, 147, 227), rgb(155, 81, 224)) rgb(255, 255, 255);">720p</a><a href="https://drive.google.com/drive/folders/11KcRi63A71j3WhBO8PLRxtBA28U3IG4B" class="shortc-button small blue" style="background: linear-gradient(135deg, rgb(6, 147, 227), rgb(155, 81, 224)) rgb(255, 255, 255);">1080p</a><a href="https://drive.google.com/drive/folders/11rtRiW_2yLHisWGTNM2CRSBKHuZR6sOz" class="shortc-button small blue" style="background: linear-gradient(135deg, rgb(6, 147, 227), rgb(155, 81, 224)) rgb(255, 255, 255);">1080p HQ</a>
-          </div>
-        </div>
+    // --- DOM ELEMENTS ---
+    const tabs = {
+        movie: document.getElementById('movie-tab'),
+        series: document.getElementById('series-tab'),
+        anime: document.getElementById('anime-tab'),
+    };
+    const inputSections = {
+        movie: document.getElementById('movie-input-section'),
+        series: document.getElementById('series-input-section'),
+        anime: document.getElementById('anime-input-section'),
+    };
+    const inputs = {
+        movie: document.getElementById('movieId'),
+        series: document.getElementById('seriesId'),
+        anime: document.getElementById('animeId'),
+    };
+    const resultsSection = document.getElementById('results-section');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const previewContainer = document.getElementById('preview-container');
+    const codeBox = document.getElementById('codeBox');
+    const addedButtonsContainer = document.getElementById('addedButtons');
+    const notificationModal = document.getElementById('notification-modal');
+    const notificationMessage = document.getElementById('notification-message');
 
-  <script id='jquery-core-js' src='https://code.jquery.com/jquery-3.7.0.min.js' type='text/javascript'/>
-  <script src='script.js' type='text/javascript'/>
+    // --- API HELPER FUNCTIONS ---
+    async function fetchFromApi(url, apiName) {
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                console.error(`${apiName} API Error: ${response.status} ${response.statusText}`);
+                showNotification(`Error: Could not fetch data from ${apiName}. Please check the ID and try again. (Error: ${response.status})`);
+                return null;
+            }
+            return await response.json();
+        } catch (error) {
+            console.error('Network or fetch error:', error);
+            showNotification('Network error. Please check your connection.');
+            return null;
+        }
+    }
+
+    // TMDB Specific
+    const fetchMovieDetails = (id) => fetchFromApi(`https://api.themoviedb.org/3/movie/${id}?api_key=${tmdbApiKey}`, 'TMDB');
+    const fetchSeriesDetails = (id) => fetchFromApi(`https://api.themoviedb.org/3/tv/${id}?api_key=${tmdbApiKey}`, 'TMDB');
+    const fetchMovieReleaseDates = (id) => fetchFromApi(`https://api.themoviedb.org/3/movie/${id}/release_dates?api_key=${tmdbApiKey}`, 'TMDB');
+    const fetchMovieCredits = (id) => fetchFromApi(`https://api.themoviedb.org/3/movie/${id}/credits?api_key=${tmdbApiKey}`, 'TMDB');
+    
+    // Jikan (MyAnimeList) Specific
+    const fetchAnimeDetails = (id) => fetchFromApi(`https://api.jikan.moe/v4/anime/${id}`, 'Jikan');
+
+
+    // --- UI LOGIC ---
+    function switchTab(tabName) {
+        activeTab = tabName;
+        Object.keys(tabs).forEach(key => {
+            const tab = tabs[key];
+            const section = inputSections[key];
+            if (key === tabName) {
+                tab.classList.add('tab-active');
+                tab.classList.remove('tab-inactive');
+                section.style.display = 'block';
+            } else {
+                tab.classList.remove('tab-active');
+                tab.classList.add('tab-inactive');
+                section.style.display = 'none';
+            }
+        });
+        // Set initial active tab on load
+        if(document.readyState === 'complete') {
+           tabs[activeTab].click();
+        }
+    }
+
+    function showNotification(message) {
+        notificationMessage.textContent = message;
+        notificationModal.style.display = 'flex';
+    }
+
+    function closeNotification() {
+        notificationModal.style.display = 'none';
+    }
+
+    function toggleLoading(show) {
+        loadingSpinner.style.display = show ? 'block' : 'none';
+        if(show) {
+            resultsSection.style.display = 'none';
+        }
+    }
+
+    // --- BUTTON MANAGEMENT ---
+    function addButton() {
+        const title = prompt('Enter button title (e.g., "720p"):');
+        if (!title) return;
+        const url = prompt('Enter button URL:');
+        if (!url) return;
+
+        buttons.push({ title, url });
+        renderAddedButtons();
+    }
+    
+    function renderAddedButtons() {
+        addedButtonsContainer.innerHTML = '';
+        buttons.forEach((button, index) => {
+            const buttonEl = document.createElement('div');
+            buttonEl.className = 'flex items-center bg-blue-100 text-blue-800 text-sm font-medium mr-2 mb-2 px-2.5 py-0.5 rounded-full';
+            buttonEl.innerHTML = `
+                <span>${button.title}</span>
+                <button onclick="removeButton(${index})" class="ml-2 text-blue-600 hover:text-blue-800">
+                    <i class="fas fa-times-circle"></i>
+                </button>
+            `;
+            addedButtonsContainer.appendChild(buttonEl);
+        });
+    }
+
+    function removeButton(index) {
+        buttons.splice(index, 1);
+        renderAddedButtons();
+    }
+
+
+    // --- CODE GENERATION LOGIC ---
+    async function generateCode() {
+        toggleLoading(true);
+
+        const id = inputs[activeTab].value;
+        if (!id) {
+            showNotification(`Please enter a ${activeTab} ID.`);
+            toggleLoading(false);
+            return;
+        }
+
+        let code = '';
+        switch (activeTab) {
+            case 'movie':
+                code = await generateMovieCode(id);
+                break;
+            case 'series':
+                code = await generateSeriesCode(id);
+                break;
+            case 'anime':
+                code = await generateAnimeCode(id);
+                break;
+        }
+
+        if (code) {
+            codeBox.textContent = code;
+            previewContainer.innerHTML = code; // Update preview
+            resultsSection.style.display = 'block';
+        }
+        
+        toggleLoading(false);
+    }
+
+    async function generateMovieCode(movieId) {
+        const movie = await fetchMovieDetails(movieId);
+        if (!movie) return null;
+
+        const [releaseDates, credits] = await Promise.all([
+            fetchMovieReleaseDates(movieId),
+            fetchMovieCredits(movieId)
+        ]);
+        
+        const usRelease = releaseDates?.results.find(r => r.iso_3166_1 === 'US');
+        const ageRating = usRelease?.release_dates[0]?.certification || 'N/A';
+        const director = credits?.crew.find(p => p.job === 'Director')?.name || 'N/A';
+        
+        const data = {...movie, ageRating, director};
+        return createTMDbHtmlTemplate(data, 'movie');
+    }
+    
+    async function generateSeriesCode(seriesId) {
+        const series = await fetchSeriesDetails(seriesId);
+        if (!series) return null;
+        return createTMDbHtmlTemplate(series, 'series');
+    }
+
+    async function generateAnimeCode(animeId) {
+        const response = await fetchAnimeDetails(animeId);
+        if (!response || !response.data) return null;
+        return createAnimeHtmlTemplate(response.data);
+    }
+
+    function createTMDbHtmlTemplate(data, type) {
+        const isMovie = type === 'movie';
+        const title = isMovie ? data.title : data.name;
+        const rating = data.vote_average ? data.vote_average.toFixed(1) : 'N/A';
+        const ratingPercentage = data.vote_average ? (data.vote_average * 10).toFixed(1) : '0';
+        const buttonsHTML = buttons.map(b => `<a href="${b.url}" class="shortc-button small blue" style="background: linear-gradient(135deg, rgb(6, 147, 227), rgb(155, 81, 224)) rgb(255, 255, 255);">${b.title}</a>`).join('');
+        const nullOrEmpty = (val) => val || 'N/A';
+        const arrayToNames = (arr) => arr ? arr.map(item => item.name).join(', ') : 'N/A';
+
+        const infoDetails = isMovie ? `
+          <ul style="text-align: left; list-style: none; padding: 0;">
+            <li><strong>English:</strong> ${nullOrEmpty(data.title)}</li>
+            <li><strong>Aired:</strong> ${nullOrEmpty(data.release_date)}</li>
+            <li><strong>Status:</strong> ${nullOrEmpty(data.status)}</li>
+            <li><strong>Revenue:</strong> $${data.revenue ? data.revenue.toLocaleString() : 'N/A'}</li>
+            <li><strong>Director:</strong> ${nullOrEmpty(data.director)}</li>
+            <li><strong>Producers:</strong> ${arrayToNames(data.production_companies)}</li>
+            <li><strong>Genres:</strong> ${arrayToNames(data.genres)}</li>
+            <li><strong>Duration:</strong> ${nullOrEmpty(data.runtime)} min</li>
+            <li><strong>IMDB id:</strong> <a href="https://imdb.com/title/${data.imdb_id}" target="_blank">${nullOrEmpty(data.imdb_id)}</a></li>
+            <li><strong>TMDB id:</strong> <a href="https://www.themoviedb.org/movie/${data.id}" target="_blank">${nullOrEmpty(data.id)}</a></li>
+            <li><strong>Org. Language:</strong> ${nullOrEmpty(data.original_language)}</li>
+            <li><strong>Age Rating:</strong> ${nullOrEmpty(data.ageRating)}</li>
+          </ul>
+        ` : `
+          <ul style="text-align: left; list-style: none; padding: 0;">
+            <li><strong>English:</strong> ${nullOrEmpty(data.name)}</li>
+            <li><strong>Aired:</strong> ${nullOrEmpty(data.first_air_date)} to ${nullOrEmpty(data.last_air_date) || 'Present'}</li>
+            <li><strong>Episodes:</strong> ${nullOrEmpty(data.number_of_episodes)}</li>
+            <li><strong>Status:</strong> ${nullOrEmpty(data.status)}</li>
+            <li><strong>Seasons:</strong> ${nullOrEmpty(data.number_of_seasons)}</li>
+            <li><strong>Producers:</strong> ${arrayToNames(data.production_companies)}</li>
+            <li><strong>Genres:</strong> ${arrayToNames(data.genres)}</li>
+            <li><strong>Duration:</strong> ${data.episode_run_time ? data.episode_run_time.join(', ') : 'N/A'} min</li>
+            <li><strong>Networks:</strong> ${arrayToNames(data.networks)}</li>
+            <li><strong>Org. Language:</strong> ${nullOrEmpty(data.original_language)}</li>
+          </ul>
+        `;
+
+        return `
+<div>
+  <a><img border="0" data-original-height="450" data-original-width="800" height="360" src="https://image.tmdb.org/t/p/w1000_and_h563_face${data.backdrop_path}" width="640" /></a>
+</div>
+<div class="review_wrap">
+  <div class="review-box review-bottom review-percentage" id="review-box">
+    <h2 class="review-box-header the-global-title">${title}</h2>
+    <div class="review-summary">
+      <div class="review-final-score">
+        <h3>${rating}</h3>
+        <h4>Average Rating</h4>
+      </div>
+      <div class="review-short-summary">
+        <p>${nullOrEmpty(data.overview)}</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toggle tie-sc-open">
+  <h3 class="toggle-head">Information <span class="fa fa-angle-down"></span></h3>
+  <div class="toggle-content" style="text-align: left;">
+    ${infoDetails}
+  </div>
+</div>
+<div class="toggle tie-sc-open">
+  <h3 class="toggle-head">Google Drive <span class="fa fa-angle-down"></span></h3>
+  <div class="toggle-content" style="text-align: center;">
+    ${buttonsHTML || 'No download links added.'}
+  </div>
+</div>
+        `.trim();
+    }
+
+    function createAnimeHtmlTemplate(data) {
+        const buttonsHTML = buttons.map(b => `<a href="${b.url}" class="shortc-button small blue" style="background: linear-gradient(135deg, rgb(6, 147, 227), rgb(155, 81, 224)) rgb(255, 255, 255);">${b.title}</a>`).join('');
+        const nullOrEmpty = (val) => val || 'N/A';
+        const arrayToNames = (arr) => arr.map(item => item.name).join(', ') || 'N/A';
+
+        return `
+<div>
+  <a><img border="0" data-original-height="450" data-original-width="800" height="360" src="${data.images.jpg.large_image_url}" width="640" /></a>
+</div>
+<div class="review_wrap">
+  <div class="review-box review-bottom review-percentage" id="review-box">
+    <h2 class="review-box-header the-global-title">${nullOrEmpty(data.title)}</h2>
+    <div class="review-summary">
+      <div class="review-final-score">
+        <h3>${data.score ? data.score.toFixed(2) : 'N/A'}</h3>
+        <h4>Average Rating</h4>
+      </div>
+      <div class="review-short-summary">
+        <p>${nullOrEmpty(data.synopsis).replace(/\n/g, '<br>')}</p>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toggle tie-sc-open">
+  <h3 class="toggle-head">Information <span class="fa fa-angle-down"></span></h3>
+  <div class="toggle-content">
+    <ul style="text-align: left;">
+      <li><strong>English:</strong> ${nullOrEmpty(data.title_english)}</li>
+      <li><strong>Japanese:</strong> ${nullOrEmpty(data.title_japanese)}</li>
+      <li><strong>Synonyms:</strong> ${data.titles.map(t => t.title).join(', ') || 'N/A'}</li>
+      <li><strong>Type:</strong> ${nullOrEmpty(data.type)}</li>
+      <li><strong>Episodes:</strong> ${nullOrEmpty(data.episodes)}</li>
+      <li><strong>Status:</strong> ${nullOrEmpty(data.status)}</li>
+      <li><strong>Aired:</strong> ${nullOrEmpty(data.aired?.string)}</li>
+      <li><strong>Producers:</strong> ${arrayToNames(data.producers)}</li>
+      <li><strong>Licensors:</strong> ${arrayToNames(data.licensors)}</li>
+      <li><strong>Studios:</strong> ${arrayToNames(data.studios)}</li>
+      <li><strong>Source:</strong> ${nullOrEmpty(data.source)}</li>
+      <li><strong>Genres:</strong> ${arrayToNames(data.genres)}</li>
+      <li><strong>Themes:</strong> ${arrayToNames(data.themes)}</li>
+      <li><strong>Demographics:</strong> ${arrayToNames(data.demographics)}</li>
+      <li><strong>Duration:</strong> ${nullOrEmpty(data.duration)}</li>
+      <li><strong>Rating:</strong> ${nullOrEmpty(data.rating)}</li>
+    </ul>
+  </div>
+</div>
+<div class="uk-alert uk-alert-primary" data-uk-alert="">
+  <p>
+    <span class="uk-margin-xsmall-right" data-uk-icon="happy"></span> To access the private drive just open Google Group and join the Google Group, ignore the rest. After that, Enjoy...&nbsp;<a href="https://groups.google.com/g/bondgreninja" target="_blank">Here</a>
+  </p>
+</div>
+<div class="toggle tie-sc-close">
+  <h3 class="toggle-head">Google Drive <span aria-hidden="true" class="fa fa-angle-down"></span></h3>
+  <div class="toggle-content" style="text-align: center;">
+    ${buttonsHTML || 'No download links added.'}
+  </div>
+</div>
+        `.trim();
+    }
+
+    // --- UTILITY FUNCTIONS ---
+    function copyCode() {
+        if (!codeBox.textContent) {
+            showNotification('Nothing to copy!');
+            return;
+        }
+        navigator.clipboard.writeText(codeBox.textContent).then(() => {
+            showNotification('Code copied to clipboard!');
+        }).catch(err => {
+            console.error('Failed to copy code.', err);
+            showNotification('Failed to copy code. Please copy manually.');
+        });
+    }
+
+    // --- INITIALIZATION ---
+    $(document).ready(function() {
+        // Event delegation for toggle functionality
+        $('body').on('click', '.toggle-head', function() {
+            $(this).next('.toggle-content').slideToggle('fast');
+            $(this).find('.fa').toggleClass('fa-angle-down fa-angle-up');
+        });
+
+        // Set initial tab
+        switchTab('movie');
+    });
+  </script>
+</body>
+</html>
